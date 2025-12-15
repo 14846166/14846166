@@ -4,7 +4,7 @@ Created on Mon Oct 21 12:38:53 2024
 
 @author: htchen
 """
-#14846061 王云威
+#14846166 賴楷崴
 
 import numpy as np
 import numpy.linalg as la
@@ -77,5 +77,6 @@ plt.xlabel('x')
 plt.xlabel('y')
 plt.legend()
 plt.show()
+
 
 
