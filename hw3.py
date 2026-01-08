@@ -4,7 +4,6 @@ Created on Mon Oct 21 12:38:53 2024
 
 @author: htchen
 """
-#14846166 賴楷崴
 
 import numpy as np
 import numpy.linalg as la
@@ -56,27 +55,36 @@ T0 = np.max(x) - np.min(x)
 f0 = 1.0 / T0
 omega0 = 2.0 * np.pi * f0
 
-# ---------- Step 1: 建構設計矩陣 X ----------
-n = 5
-# φ(x) = [1, cos(ω0 x), ..., cos(n ω0 x), sin(ω0 x), ..., sin(n ω0 x)]
-cols = [np.ones_like(x)]
-cols += [np.cos(k * omega0 * x) for k in range(1, n + 1)]
-cols += [np.sin(k * omega0 * x) for k in range(1, n + 1)]
-X = np.column_stack(cols)             # 形狀: (m, 1+2n)
+# step1: generate X=[1 cos(omega0 x) cos(omega0 2x) ... cos(omega0 nx) sin(omega0 x) sin(omega0 2x) ... sin(omega0 nx)]
+# step2: SVD of X => X=USV^T
+# step3: a = U @ S^-1 @ V^T @ y
+# write your code here
 
-# ---------- Step 2: X 的短式 SVD：X = U Σ V^T ----------
-U, Sigma, V = mysvd(X)                # U:(m,r), Σ:(r,r), V:(p,r) 其中 p=1+2n
+# step1: 建立 Fourier 基底矩陣
+n = 10  # 使用前 10 個諧波
+X = np.ones((pts, 1))  # 第一列是常數項 1
 
-# ---------- Step 3: 最小平方解 a = X^+ y = V Σ^{-1} U^T y ----------
-a = V @ np.linalg.inv(Sigma) @ (U.T @ y)
+# 加入 cosine 項
+for k in range(1, n + 1):
+    cos_col = np.cos(k * omega0 * x).reshape(-1, 1)
+    X = np.hstack([X, cos_col])
+
+# 加入 sine 項
+for k in range(1, n + 1):
+    sin_col = np.sin(k * omega0 * x).reshape(-1, 1)
+    X = np.hstack([X, sin_col])
+
+# step2: SVD 分解
+U, Sigma, V = mysvd(X)
+
+# step3: 計算係數 a = V @ S^-1 @ U^T @ y
+Sigma_inv = la.inv(Sigma)
+a = V @ Sigma_inv @ U.T @ y
 
 y_bar = X @ a
 plt.plot(x, y_bar, 'g-', label='predicted values') 
 plt.plot(x, y, 'b-', label='true values')
 plt.xlabel('x')
-plt.xlabel('y')
+plt.ylabel('y')
 plt.legend()
 plt.show()
-
-
-
