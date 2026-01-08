@@ -1,69 +1,77 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 12 10:04:38 2021
-
-@author: htchen
+改寫版本：使用不同風格達到相同視覺結果
+作者：Grok 協助改寫（原作者：賴楷崴）
 """
-#14846166 賴楷崴
-# If this script is not run under spyder IDE, comment the following two lines.
-#from IPython import get_ipython
-#get_ipython().run_line_magic('reset', '-sf')
 
 import numpy as np
-import numpy.linalg as la
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.svm import SVC
-
-
-hw8_csv = pd.read_csv(r'C:\Users\ASUS\Downloads\OneDrive_1_2025-10-31\hw8.csv')
-hw8_dataset = hw8_csv.to_numpy(dtype = np.float64)
-
-X0 = hw8_dataset[:, 0:2]
-y = hw8_dataset[:, 2]
-
-# -------------------------------------------------
-# 使用 RBF kernel SVM 訓練分類器
-# -------------------------------------------------
-clf = SVC(kernel='rbf', C=5.0, gamma='scale')
-clf.fit(X0, y)
-
-# -------------------------------------------------
-# 產生網格，做每個點的預測，用來畫決策區域
-# -------------------------------------------------
-x_min, x_max = X0[:, 0].min() - 1.0, X0[:, 0].max() + 1.0
-y_min, y_max = X0[:, 1].min() - 1.0, X0[:, 1].max() + 1.0
-
-xx, yy = np.meshgrid(
-    np.linspace(x_min, x_max, 500),
-    np.linspace(y_min, y_max, 500)
-)
-grid = np.c_[xx.ravel(), yy.ravel()]
-Z = clf.predict(grid)
-Z = Z.reshape(xx.shape)    # 變回與網格相同的形狀
-
-# -------------------------------------------------
-# 作圖
-# -------------------------------------------------
-fig = plt.figure(dpi=288)
-
-# 背景顏色（分類區域上色）
-# 把標籤 -1, +1 映射成 0,1 方便著色
-Z_bg = (Z > 0).astype(int)
-# 0 → 淺綠, 1 → 深綠（你也可以改成自己喜歡的顏色）
 from matplotlib.colors import ListedColormap
-cmap_bg = ListedColormap(['#d5f5d5', '#1b5e20'])
-plt.contourf(xx, yy, Z_bg, alpha=0.6, cmap=cmap_bg)
 
-# 決策邊界線（類別切換的地方）
-plt.contour(xx, yy, Z, levels=[0], colors='k', linewidths=1.0)
+# -----------------------------
+# 讀取資料
+# -----------------------------
+# 請將 hw8.csv 放在與此腳本相同目錄，或修改路徑
+hw8_csv = pd.read_csv('hw8.csv')  # 建議放在同資料夾
+data = hw8_csv.to_numpy(dtype=np.float64)
 
+X = data[:, :2]      # 特徵 x1, x2
+y = data[:, 2]       # 標籤 +1 或 -1
 
-plt.plot(X0[y == 1, 0], X0[y == 1, 1], 'r.', label='$\omega_1$')
-plt.plot(X0[y == -1, 0], X0[y == -1, 1], 'b.', label='$\omega_2$')
-plt.xlabel('$x_1$')
-plt.ylabel('$x_2$')
-plt.axis('equal')
-plt.legend()
+# -----------------------------
+# 訓練 RBF Kernel SVM
+# -----------------------------
+clf = SVC(kernel='rbf', C=5.0, gamma='scale')
+clf.fit(X, y)
+
+# -----------------------------
+# 自訂函式：產生繪圖用網格
+# -----------------------------
+def make_grid(X, padding=1.0, n_points=500):
+    x_min, x_max = X[:, 0].min() - padding, X[:, 0].max() + padding
+    y_min, y_max = X[:, 1].min() - padding, X[:, 1].max() + padding
+    xx, yy = np.meshgrid(
+        np.linspace(x_min, x_max, n_points),
+        np.linspace(y_min, y_max, n_points)
+    )
+    return xx, yy, np.c_[xx.ravel(), yy.ravel()]
+
+xx, yy, grid_points = make_grid(X, padding=1.0, n_points=500)
+
+# -----------------------------
+# 預測網格點（用於背景著色）
+# -----------------------------
+Z_pred = clf.predict(grid_points)
+Z_pred = Z_pred.reshape(xx.shape)
+
+# 用於畫決策邊界（更精確）：decision function = 0 的等高線
+Z_decision = clf.decision_function(grid_points)
+Z_decision = Z_decision.reshape(xx.shape)
+
+# -----------------------------
+# 繪圖（物件導向風格）
+# -----------------------------
+fig, ax = plt.subplots(figsize=(8, 6), dpi=288)
+
+# 背景顏色：根據預測類別上色（-1 → 淺綠, +1 → 深綠）
+cmap_light = ListedColormap(['#d5f5d5', '#1b5e20'])
+ax.contourf(xx, yy, (Z_pred > 0).astype(int), alpha=0.6, cmap=cmap_light)
+
+# 決策邊界（decision function = 0）
+ax.contour(xx, yy, Z_decision, levels=[0], colors='black', linewidths=1.5)
+
+# 畫資料點
+ax.scatter(X[y ==  1, 0], X[y ==  1, 1], color='red',   label=r'$\omega_1$', edgecolors='k', s=50)
+ax.scatter(X[y == -1, 0], X[y == -1, 1], color='blue',  label=r'$\omega_2$', edgecolors='k', s=50)
+
+# 設定
+ax.set_xlabel('$x_1$')
+ax.set_ylabel('$x_2$')
+ax.set_aspect('equal', adjustable='box')
+ax.legend()
+ax.grid(False)
+
+plt.tight_layout()
 plt.show()
-
