@@ -23,20 +23,12 @@ def gram_schmidt(S1: np.ndarray):
     """
     m, n = S1.shape
     S2 = np.zeros((m, n))
+    
     for j in range(n):
-        # 取第 j 個向量
         u = S1[:, j].copy()
-
-        # 投影到前面所有 e_i 上，減掉投影部分
         for i in range(j):
-            proj = np.dot(S1[:, j], S2[:, i]) * S2[:, i]
-            u -= proj
-
-        # 正規化
-        norm_u = la.norm(u)
-        if norm_u == 0:
-            raise ValueError(f"Vector {j} is linearly dependent.")
-        S2[:, j] = u / norm_u
+            u -= np.dot(S1[:, j], S2[:, i]) * S2[:, i]
+        S2[:, j] = u / la.norm(u)
 
 
     return S2
@@ -67,4 +59,5 @@ S2.T @ S2 =>
  [-0. -0.  1.  0.  0.]
  [ 0. -0.  0.  1.  0.]
  [ 0. -0.  0.  0.  1.]]
+
 """  
