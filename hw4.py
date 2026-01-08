@@ -4,7 +4,6 @@ Created on Sat Oct 19 07:35:13 2024
 
 @author: htchen
 """
-#14846166 賴楷崴
 import numpy as np
 import numpy.linalg as la
 
@@ -26,35 +25,25 @@ def scale_to_range(X: np.ndarray, to_range=(0,1), byrow = False):
     
     """
     a, b = to_range
-    X = np.asarray(X, dtype=float)
-    Y = np.zeros_like(X, dtype=float)
-
-    # ---------- 1D 情況 ----------
+    Y = np.zeros(X.shape)
+    # write your code here
     if X.ndim == 1:
+        # 1D 陣列：整體縮放
         x_min, x_max = np.min(X), np.max(X)
-        if x_max == x_min:
-            Y[:] = a  # 若全部值相同
-        else:
-            Y = a + (X - x_min) / (x_max - x_min) * (b - a)
-        return np.round(Y, 2)
-    # ---------- 2D 情況 ----------
-    if byrow:
-        # 每一列 (row-wise)
-        for i in range(X.shape[0]):
-            x_min, x_max = np.min(X[i, :]), np.max(X[i, :])
-            if x_max == x_min:
-                Y[i, :] = a
-            else:
-                Y[i, :] = a + (X[i, :] - x_min) / (x_max - x_min) * (b - a)
+        Y = (X - x_min) / (x_max - x_min) * (b - a) + a if x_max != x_min else np.full(X.shape, a)
     else:
-        # 每一行 (column-wise)
-        for j in range(X.shape[1]):
-            x_min, x_max = np.min(X[:, j]), np.max(X[:, j])
-            if x_max == x_min:
-                Y[:, j] = a
-            else:
-                Y[:, j] = a + (X[:, j] - x_min) / (x_max - x_min) * (b - a)
-    return np.round(Y, 2)
+        # 2D 陣列
+        if byrow:
+            # 按行縮放
+            for i in range(X.shape[0]):
+                row_min, row_max = np.min(X[i, :]), np.max(X[i, :])
+                Y[i, :] = (X[i, :] - row_min) / (row_max - row_min) * (b - a) + a if row_max != row_min else a
+        else:
+            # 按列縮放
+            for j in range(X.shape[1]):
+                col_min, col_max = np.min(X[:, j]), np.max(X[:, j])
+                Y[:, j] = (X[:, j] - col_min) / (col_max - col_min) * (b - a) + a if col_max != col_min else a
+    return Y
 
 print('test case 1:')
 A = np.array([1, 2.5, 6, 4, 5])
@@ -113,5 +102,4 @@ scale_to_range(A, byrow=True) =>
  [1.   0.75 0.   0.25 0.5 ]
  [0.5  1.   0.75 0.   0.25]]   
 S 
-"""    
-
+"""
