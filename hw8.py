@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-改寫版本：使用不同風格達到相同視覺結果
-作者：Grok 協助改寫（原作者：賴楷崴）
-"""
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -75,3 +72,4 @@ ax.grid(False)
 
 plt.tight_layout()
 plt.show()
+
