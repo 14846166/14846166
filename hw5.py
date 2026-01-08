@@ -4,10 +4,9 @@ Created on Mon Mar 15 09:37:05 2021
 
 @author: htchen
 """
-#14846166 賴楷崴
 # If this script is not run under spyder IDE, comment the following two lines.
-#from IPython import get_ipython
-#get_ipython().run_line_magic('reset', '-sf')
+from IPython import get_ipython
+get_ipython().run_line_magic('reset', '-sf')
 
 import math
 import numpy as np
@@ -99,77 +98,30 @@ def poly_data_matrix(x: np.ndarray, n: int):
         X[:, deg] = X[:, deg - 1] * x
     return X
 
-hw5_csv = pd.read_csv(r'C:\Users\ASUS\Downloads\OneDrive_1_2025-10-31\hw5.csv')
+hw5_csv = pd.read_csv('data/hw5.csv')
 hw5_dataset = hw5_csv.to_numpy(dtype = np.float64)
 
 hours = hw5_dataset[:, 0]
 sulfate = hw5_dataset[:, 1]
 
-
-
-
-
-# ---------------------------------------------------------
-# (1) 濃度 vs 時間：散佈圖 + 多項式迴歸曲線
-# ---------------------------------------------------------
-plt.figure()
-
-# 原始資料
-plt.plot(hours, sulfate, 'ko', label='data')
-
-# 這裡選擇一個「多項式回歸」作為我們的迴歸方法，例：三次多項式
-deg = 3
-X = poly_data_matrix(hours, deg)
-U, Sigma, V = mysvd(X)
-# least square 解：a = V Σ^{-1} U^T y
-a = V @ np.linalg.inv(Sigma) @ (U.T @ sulfate)
-
-# 為了畫平滑曲線，我們在時間軸上取更多點
-t_grid = np.linspace(hours.min(), hours.max(), 200)
-X_grid = poly_data_matrix(t_grid, deg)
-sulfate_pred = X_grid @ a
-
-plt.plot(t_grid, sulfate_pred, 'b-', label=f'poly deg={deg} regression')
-
-plt.title('Sulfate concentration vs time')
+# 繪製第一張圖：正常尺度
+plt.figure(figsize=(8, 5))
+plt.plot(hours, sulfate, 'bo-', markersize=6, linewidth=1.5)
+plt.title('concentration vs time')
 plt.xlabel('time in hours')
 plt.ylabel('sulfate concentration (times $10^{-4}$)')
-plt.legend()
+plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.show()
 
-# ---------------------------------------------------------
-# (2) log(濃度) vs log(時間)：散佈圖 + 線性迴歸直線
-# ---------------------------------------------------------
-
-# 只取正值（時間與濃度都應該是正的，這裡保險起見）
-mask = (hours > 0) & (sulfate > 0)
-hours_pos = hours[mask]
-sulfate_pos = sulfate[mask]
-
-log_t = np.log(hours_pos)
-log_c = np.log(sulfate_pos)
-
-plt.figure()
-
-# log-log 的散佈圖
-plt.plot(log_t, log_c, 'ko', label='log-log data')
-
-# 在 log-log 空間做線性回歸：log_c = b0 + b1 * log_t
-X_log = poly_data_matrix(log_t, 1)  # [1, log_t]
-U_log, Sigma_log, V_log = mysvd(X_log)
-a_log = V_log @ np.linalg.inv(Sigma_log) @ (U_log.T @ log_c)
-
-# 畫線
-xg = np.linspace(log_t.min(), log_t.max(), 200)
-Xg_log = poly_data_matrix(xg, 1)
-yg = Xg_log @ a_log
-
-plt.plot(xg, yg, 'b-', label='linear regression in log-log')
-
-plt.title('log(sulfate concentration) vs log(time)')
-plt.xlabel('log(time in hours)')
-plt.ylabel('log(sulfate concentration  (times $10^{-4}$))')
-plt.legend()
+# 繪製第二張圖：log-log 尺度
+plt.figure(figsize=(8, 5))
+plt.plot(hours, sulfate, 'ro-', markersize=6, linewidth=1.5)
+plt.xscale("log")
+plt.yscale("log")
+plt.title('concentration vs time (log-log scale)')
+plt.xlabel('time in hours')
+plt.ylabel('sulfate concentration  (times $10^{-4}$)')
+plt.grid(True, alpha=0.3, which='both')
 plt.tight_layout()
 plt.show()
